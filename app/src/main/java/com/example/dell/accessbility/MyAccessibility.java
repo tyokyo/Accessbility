@@ -2,10 +2,14 @@ package com.example.dell.accessbility;
 
 import android.accessibilityservice.AccessibilityService;
 import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.content.ContentValues;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import java.util.Calendar;
 import java.util.Locale;
 
 @SuppressLint("NewApi")
@@ -22,6 +26,25 @@ public class MyAccessibility extends AccessibilityService {
 //		accessibilityServiceInfo.feedbackType = AccessibilityServiceInfo.FEEDBACK_SPOKEN;
 //		accessibilityServiceInfo.notificationTimeout = 1000;
 //		setServiceInfo(accessibilityServiceInfo);
+	}
+	private void printNotificationInfo(AccessibilityEvent event){
+		long timestamp = Calendar.getInstance().getTimeInMillis();
+		String sourcePackageName = (String) event.getPackageName();
+		String message = "";
+		for (CharSequence text : event.getText()) {
+			message += text + "\n";
+		}
+		if (message.length() > 0) {
+			message = message.substring(0, message.length() - 1);
+		}
+		Parcelable parcelable = event.getParcelableData();
+		if (!(parcelable instanceof Notification)) {
+			ContentValues cv = new ContentValues();
+			cv.put("package", sourcePackageName);
+			cv.put("message", message);
+			cv.put("timestap", timestamp);
+			Log.i(TAG,"Notification-msg is "+message);
+		}
 	}
 	private String getEventTypeString(AccessibilityEvent paramAccessibilityEvent)
 	{
@@ -143,7 +166,6 @@ public class MyAccessibility extends AccessibilityService {
 		int eventType = event.getEventType();
 		String eventText = "";
 		switch (eventType) {
-
 		case AccessibilityEvent.TYPE_VIEW_CLICKED:
 			try {
 				printEventLog(event);
@@ -166,10 +188,12 @@ public class MyAccessibility extends AccessibilityService {
 			eventText = "TYPE_VIEW_TEXT_CHANGED";
 			break;
 		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
+			printNotificationInfo(event);
 			eventText = "TYPE_WINDOW_STATE_CHANGED";
 			break;
 		case AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED:
 			eventText = "TYPE_NOTIFICATION_STATE_CHANGED";
+			Log.i(TAG,"AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED");
 			break;
 		case AccessibilityEvent.TYPE_TOUCH_EXPLORATION_GESTURE_END:
 			eventText = "TYPE_TOUCH_EXPLORATION_GESTURE_END";
